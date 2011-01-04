@@ -7,14 +7,14 @@ import (
 	"reflect"
 )
 
-type FitError struct {
+type Error struct {
 	Desc  string
 	Val   interface{}
 	Label string
 	Type  reflect.Type
 }
 
-func (e *FitError) String() string {
+func (e *Error) String() string {
 	return fmt.Sprintf("%#v does not fit %s %v: %s", e.Val, e.Label, e.Type, e.Desc)
 }
 
@@ -28,7 +28,7 @@ func Fit(data, slot interface{}) os.Error {
 	v := reflect.NewValue(slot)
 	pv, ok := v.(*reflect.PtrValue)
 	if !ok {
-		err := &FitError{Desc: "not a pointer", Val: data, Label: "slot"}
+		err := &Error{Desc: "not a pointer", Val: data, Label: "slot"}
 		if v != nil {
 			err.Type = v.Type()
 		}
@@ -82,7 +82,7 @@ func fitValue(x interface{}, v reflect.Value) os.Error {
 			uv.Set(uint64(t))
 			break
 		}
-		return &FitError{"cannot hold an integer", t, "slot", v.Type()}
+		return &Error{"cannot hold an integer", t, "slot", v.Type()}
 	case uint64:
 		uv, ok := v.(*reflect.UintValue)
 		if ok {
@@ -100,7 +100,7 @@ func fitValue(x interface{}, v reflect.Value) os.Error {
 			iv.Set(int64(t))
 			break
 		}
-		return &FitError{"cannot hold an integer", t, "slot", v.Type()}
+		return &Error{"cannot hold an integer", t, "slot", v.Type()}
 	case []byte:
 		return fitBytes(t, v)
 	case nil:
@@ -108,7 +108,7 @@ func fitValue(x interface{}, v reflect.Value) os.Error {
 	case []interface{}:
 		return fitSeq(t, v)
 	default:
-		return &FitError{"unknown source type", x, "slot", v.Type()}
+		return &Error{"unknown source type", x, "slot", v.Type()}
 	}
 
 	return nil
@@ -120,7 +120,7 @@ func fitBytes(b []byte, v reflect.Value) os.Error {
 	case *reflect.StringValue:
 		t.Set(string(b))
 	default:
-		return &FitError{"cannot hold a string", b, "slot", v.Type()}
+		return &Error{"cannot hold a string", b, "slot", v.Type()}
 	}
 
 	return nil
@@ -131,12 +131,12 @@ func fitSeq(s []interface{}, v reflect.Value) os.Error {
 	switch t := v.(type) {
 	case *reflect.StructValue:
 		if len(s) != t.NumField() {
-			return &FitError{"arity mismatch", s, "struct", v.Type()}
+			return &Error{"arity mismatch", s, "struct", v.Type()}
 		}
 		for i := range s {
 			f := t.Type().(*reflect.StructType).Field(i)
 			if f.PkgPath != "" {
-				return &FitError{"private field", s[i], f.Name, f.Type}
+				return &Error{"private field", s[i], f.Name, f.Type}
 			}
 			err := fitValue(s[i], t.Field(i))
 			if err != nil {
@@ -145,7 +145,7 @@ func fitSeq(s []interface{}, v reflect.Value) os.Error {
 		}
 	case *reflect.ArrayValue:
 		if len(s) != t.Len() {
-			return &FitError{"arity mismatch", s, "array", v.Type()}
+			return &Error{"arity mismatch", s, "array", v.Type()}
 		}
 		for i := range s {
 			err := fitValue(s[i], t.Elem(i))
@@ -163,9 +163,9 @@ func fitSeq(s []interface{}, v reflect.Value) os.Error {
 		}
 	default:
 		if v == nil {
-			return &FitError{"cannot hold a sequence", s, "slot", nil}
+			return &Error{"cannot hold a sequence", s, "slot", nil}
 		}
-		return &FitError{"cannot hold a sequence", s, "slot", v.Type()}
+		return &Error{"cannot hold a sequence", s, "slot", v.Type()}
 	}
 
 	return nil
