@@ -18,7 +18,7 @@ Currently, Fit can only deal with a handful of input types: int64, uint64,
 It fits slices into structs by recursively fitting each element of the slice
 to each field in the struct.
 
-Fit returns an os.Error if it cannot match the data in the slot, for instance,
-if the types are incompatible, if a numeric type overflows the slog, or if the
+Fit returns an os.Error if it cannot get the data into the slot, for instance,
+if the types are incompatible, if a numeric type overflows the slot, or if the
 slot holds a fixed number of elements (i.e. it is an array or a struct) and
 the input slice does not have the same number of elements.
