@@ -12,6 +12,12 @@ pointer, then tries to fit the value into the pointer as best it can.
 
     fmt.Println(t)
 
+or
+
+    var n int
+    Fit(int64(1), &n)
+    fmt.Println(n)
+
 Currently, Fit can only deal with a handful of input types: int64, uint64,
 []byte, nil, and []interface{}. It should be expanded to handle any type.
 
